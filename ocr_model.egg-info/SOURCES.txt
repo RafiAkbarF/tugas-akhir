@@ -1,0 +1,11 @@
+setup.py
+ocr_model/__init__.py
+ocr_model/ocr_function.py
+ocr_model/ocr_upload.py
+ocr_model/process_image.py
+ocr_model.egg-info/PKG-INFO
+ocr_model.egg-info/SOURCES.txt
+ocr_model.egg-info/dependency_links.txt
+ocr_model.egg-info/entry_points.txt
+ocr_model.egg-info/requires.txt
+ocr_model.egg-info/top_level.txt

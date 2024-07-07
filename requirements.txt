@@ -1,0 +1,15 @@
+# Flask==2.0.1
+# torch==2.3.0
+# torchvision==0.18
+# pillow==10.3.0
+# Werkzeug==2.0.1
+# ultralytics
+
+
+Flask
+torch
+opencv-python
+Pillow
+yolov5
+numpy
+ultralytics

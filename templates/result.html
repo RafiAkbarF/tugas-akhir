@@ -1,0 +1,37 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Result</title>
+        <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+        <style>
+            .container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .image-container {
+                margin: 20px;
+            }
+            .text-container {
+                margin: 20px;
+            }
+            .custom-width {
+                width: 1080px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="image-container">
+                <h3>Preprocessed Image:</h3>
+                <img src="data:image/png;base64,{{ preprocessed_img_data }}" alt="Preprocessed Image" class="custom-width">
+            </div>
+            <div class="text-container">
+                <h3>Extracted Text:</h3>
+                <p>{{ extracted_text }}</p>
+            </div>
+        </div>
+        </div>
+    </body>
+    </html>

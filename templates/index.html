@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLOv5 Image Detection</title>
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<style>
+    #imagePreview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+    
+    .hidden {
+        display: none;
+    }
+
+    .background-image {
+        background-image: url('https://e0.pxfuel.com/wallpapers/205/780/desktop-wallpaper-cool-bike-background-in-for-awesome-yamaha.jpg');
+        background-position: center center;
+        background-size: cover;
+    }
+
+    .loader {
+        border: 16px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 16px solid blue;
+        width: 120px;
+        height: 120px;
+        animation: spin 2s linear infinite;
+    }
+
+    #extractedText {
+        size: 1.5rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+<body>
+    <div class="relative min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 bg-gray-500 bg-no-repeat bg-cover relative items-center background-image">
+        <div class="absolute bg-black opacity-60 inset-0 z-0"></div>
+        <div class="p-10 bg-white rounded-xl z-10">
+            <div class="text-center">
+                <h2 class="mt-5 text-3xl font-bold text-gray-900">
+                    Upload Image for Detection
+                </h2>
+                <p class="mt-2 text-sm text-gray-400">Select an image to upload and detect objects using YOLOv5.</p>
+            </div>
+            <form class="mt-8 space-y-3" id="uploadForm" enctype="multipart/form-data">
+                <div class="grid grid-cols-1 space-y-2">
+                    <label class="text-sm font-bold text-gray-500 tracking-wide">Attach Image</label>
+                    <div class="flex items-center justify-center w-full">
+                        <label class="flex flex-col rounded-lg border-4 border-dashed w-full h-40 group text-center">
+                            <div class="w-full text-center flex flex-col justify-center">
+                                <img class="w-full h-full hidden" id="imagePreview" />
+                                <p class="pointer-none text-gray-500" id="uploadText">
+                                    <span class="text-sm">Drag and drop</span> files here <br />
+                                    or select a file from your computer
+                                </p>
+                            </div>
+                            <input id="imageInput" type="file" name="file" class="hidden" required>
+                        </label>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-300">
+                    <span>File type: jpg, png, jpeg</span>
+                </p>
+                <div>
+                    <button type="submit" class="my-5 w-full flex justify-center bg-blue-500 text-gray-100 p-4 rounded-full tracking-wide
+                        font-semibold focus:outline-none focus:shadow-outline hover:bg-blue-600 shadow-lg cursor-pointer transition ease-in duration-300">
+                        Upload
+                    </button>
+                </div>
+            </form>
+            <div id="loading" class="hidden flex justify-center my-5">
+                <div class="loader"></div>
+            </div>
+            <div id="resultContainer" class="hidden mt-8 space-y-3">
+                <div class="space-y-3">
+                    <h3 class="text-2xl font-bold text-gray-900">Preprocessed Image:</h3>
+                    <img id="preprocessedImage" src="" alt="Preprocessed Image" class="w-[1080px]">
+                </div>
+                <div class="space-y-3">
+                    <h3 class="text-2xl font-bold text-gray-900">Extracted Text:</h3>
+                    <div class="flex items-center justify-center">
+                        <h1 id="extractedText" class="text-3xl"></h1>
+                        <button id="copyButton" class="ml-4 p-2 bg-blue-500 text-white rounded">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function() {
+            $('#imageInput').on('change', function(event) {
+                const file = event.target.files[0];
+                const imagePreview = $('#imagePreview');
+                const uploadText = $('#uploadText');
+
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.attr('src', e.target.result).removeClass('hidden');
+                        uploadText.addClass('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            $('#uploadForm').on('submit', function(event) {
+                event.preventDefault();
+                const formData = new FormData(this);
+                $('#loading').removeClass('hidden');
+                $('#resultContainer').addClass('hidden');
+
+                $.ajax({
+                    url: '/predict',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $('#loading').addClass('hidden');
+                        if (response.error) {
+                            alert(response.error);
+                        } else {
+                            $('#extractedText').text(response.extracted_text);
+                            $('#preprocessedImage').attr('src', 'data:image/png;base64,' + response.preprocessed_img_data);
+                            $('#resultContainer').removeClass('hidden');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        $('#loading').addClass('hidden');
+                        alert('An error occurred: ' + xhr.responseText);
+                    }
+                });
+            });
+
+            $('#copyButton').on('click', function() {
+                const text = $('#extractedText').text();
+                navigator.clipboard.writeText(text).then(function() {
+                    alert('Text copied to clipboard');
+                }, function(err) {
+                    alert('Failed to copy text: ', err);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
